@@ -1,72 +1,185 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Continuity Demo</title>
-  <style>
-    body { font-family: Arial, sans-serif; background:#f4f4f4; padding:20px; }
-    .container { max-width: 700px; margin:auto; background:white; padding:20px; border-radius:8px; }
-    button { padding:10px 15px; margin:5px; cursor:pointer; }
-    .card { border:1px solid #ddd; padding:15px; margin:15px 0; border-radius:6px; }
-    .hidden { display:none; }
-    h2 { margin-top:0; }
-  </style>
+<meta charset="UTF-8" />
+<title>Continuity – Demo</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f5f6f8;
+    color: #222;
+  }
+
+  header {
+    background: linear-gradient(135deg, #4f7cff, #6ba8ff);
+    color: white;
+    padding: 80px 20px;
+    text-align: center;
+  }
+
+  header h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    animation: fadeIn 1s ease;
+  }
+
+  header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    animation: fadeIn 1.5s ease;
+  }
+
+  section {
+    max-width: 1000px;
+    margin: auto;
+    padding: 60px 20px;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+  }
+
+  .card img {
+    width: 100%;
+    border-radius: 10px;
+    margin-bottom: 15px;
+  }
+
+  button {
+    background: #4f7cff;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  button:hover {
+    background: #3c66d6;
+  }
+
+  .demo {
+    display: none;
+    animation: slideUp 0.6s ease;
+  }
+
+  .status {
+    margin-top: 10px;
+    font-weight: 600;
+  }
+
+  footer {
+    text-align: center;
+    padding: 40px;
+    opacity: 0.6;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
 </head>
+
 <body>
 
-<div class="container">
-  <h1>Continuity Platform – Demo</h1>
+<header>
+  <h1>Continuity</h1>
+  <p>So elderly people don’t disappear between doctor visits.</p>
+</header>
 
-  <button onclick="show('anna')">Anna (67)</button>
-  <button onclick="show('family')">Family</button>
-  <button onclick="show('doctor')">Doctor</button>
+<section>
+  <h2>Why this exists</h2>
+  <p>
+    Healthcare works in visits. Aging happens in between them.
+    Continuity remembers, checks in, and connects — calmly.
+  </p>
+</section>
 
-  <!-- ANNA -->
-  <div id="anna" class="card hidden">
-    <h2>Anna – Today</h2>
-    <p><strong>Last visit:</strong> Knee pain (arthritis)</p>
-    <p><strong>Doctor said:</strong> Pain may worsen for 2–3 weeks. Come back if it gets worse.</p>
-
-    <p><strong>How is your pain today?</strong></p>
-    <button onclick="updatePain('🙂 Doing okay')">🙂</button>
-    <button onclick="updatePain('😐 Some pain')">😐</button>
-    <button onclick="updatePain('🙁 Worse')">🙁</button>
-
-    <p id="annaStatus"></p>
+<section class="cards">
+  <div class="card">
+    <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e" />
+    <h3>Anna, 67</h3>
+    <p>Lives alone. Arthritis. Just wants to know if what she’s feeling is okay.</p>
+    <button onclick="showDemo('anna')">See Anna’s view</button>
   </div>
 
-  <!-- FAMILY -->
-  <div id="family" class="card hidden">
-    <h2>Family View</h2>
-    <p>✔ Anna checked in this week</p>
-    <p id="familyStatus">Pain status: no update yet</p>
-    <p><em>No medical details. Just reassurance.</em></p>
+  <div class="card">
+    <img src="https://images.unsplash.com/photo-1520975922284-4b8b38c2c6d1" />
+    <h3>Family</h3>
+    <p>They don’t want data. They want reassurance.</p>
+    <button onclick="showDemo('family')">See family view</button>
   </div>
 
-  <!-- DOCTOR -->
-  <div id="doctor" class="card hidden">
-    <h2>Doctor View</h2>
-    <p><strong>Patient:</strong> Anna, 67</p>
-    <p><strong>Condition:</strong> Arthritis</p>
-    <p id="doctorStatus">No concerning trends</p>
+  <div class="card">
+    <img src="https://images.unsplash.com/photo-1580281657521-7c6b2c8d4d9b" />
+    <h3>Doctor</h3>
+    <p>No dashboards. Just context when it matters.</p>
+    <button onclick="showDemo('doctor')">See doctor view</button>
   </div>
-</div>
+</section>
+
+<section id="anna" class="demo">
+  <h2>Anna’s check-in</h2>
+  <p>How is your pain today?</p>
+  <button onclick="updatePain('🙂 Doing okay')">🙂</button>
+  <button onclick="updatePain('😐 Some pain')">😐</button>
+  <button onclick="updatePain('🙁 Worse')">🙁</button>
+  <p class="status" id="annaStatus"></p>
+</section>
+
+<section id="family" class="demo">
+  <h2>Family view</h2>
+  <p>✔ Anna checked in this week</p>
+  <p class="status" id="familyStatus">Pain status: no update yet</p>
+</section>
+
+<section id="doctor" class="demo">
+  <h2>Doctor view</h2>
+  <p>Patient: Anna, 67 — arthritis</p>
+  <p class="status" id="doctorStatus">No concerning trends</p>
+</section>
+
+<footer>
+  This is a concept demo. Not a medical device.
+</footer>
 
 <script>
-  function show(id) {
-    document.getElementById('anna').classList.add('hidden');
-    document.getElementById('family').classList.add('hidden');
-    document.getElementById('doctor').classList.add('hidden');
-    document.getElementById(id).classList.remove('hidden');
+  function showDemo(id) {
+    document.querySelectorAll('.demo').forEach(d => d.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    window.scrollTo({ top: document.getElementById(id).offsetTop - 20, behavior: 'smooth' });
   }
 
   function updatePain(status) {
     document.getElementById('annaStatus').innerText = "You reported: " + status;
     document.getElementById('familyStatus').innerText = "Pain status: " + status;
-    
+
     if (status.includes("🙁")) {
       document.getElementById('doctorStatus').innerText =
-        "⚠ Pain worsening over time. Consider follow-up.";
+        "⚠ Pain worsening. Consider follow-up.";
     } else {
       document.getElementById('doctorStatus').innerText =
         "Pain stable. No action needed.";
@@ -76,3 +189,4 @@
 
 </body>
 </html>
+
