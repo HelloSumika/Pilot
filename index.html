@@ -1,80 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>StudyEd – AI Team Formation</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<title>StudyEd — Intelligent Team Formation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 :root{
-  --bg:#0b1220;
-  --card:#111a2e;
+  --bg:#0b1020;
+  --card:#121a32;
   --accent:#3a8dff;
-  --accent2:#00d1b2;
+  --good:#00d1b2;
+  --mid:#ffd166;
+  --bad:#ef476f;
   --muted:#9fb0c0;
 }
-
 body{
   margin:0;
-  font-family:system-ui, -apple-system, Segoe UI, Roboto;
-  background:var(--bg);
-  color:white;
+  font-family:Inter,system-ui;
+  background:linear-gradient(180deg,#060b18,#0b1020);
+  color:#fff;
 }
-
-.container{
-  max-width:1100px;
-  margin:auto;
-  padding:20px;
-}
-
+.container{max-width:1200px;margin:auto;padding:24px}
 h1,h2,h3{margin-top:0}
 .card{
   background:var(--card);
-  border-radius:12px;
+  border-radius:14px;
   padding:16px;
   margin-bottom:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
 }
-
 input,button{
   width:100%;
-  padding:8px;
-  border-radius:8px;
+  padding:10px;
+  border-radius:10px;
   border:none;
   margin-top:6px;
 }
-
 input{
   background:#0e1730;
-  color:white;
+  color:#fff;
 }
-
 button{
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  font-weight:600;
+  background:linear-gradient(90deg,var(--accent),#6a4dff);
+  font-weight:700;
   cursor:pointer;
 }
-
-.small{font-size:13px;color:var(--muted)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.student{
+  padding:10px;
+  border-radius:10px;
+  background:#0e1730;
+  margin-bottom:8px;
+}
 .pill{
   display:inline-block;
   padding:4px 10px;
   border-radius:999px;
   font-size:12px;
-  background:rgba(255,255,255,0.08);
+  font-weight:700;
 }
-.student{
-  padding:10px;
-  border-radius:8px;
-  background:#0e1730;
-  margin-bottom:8px;
-}
-.score-high{background:#00d1b2}
-.score-mid{background:#ffd166}
-.score-low{background:#ef476f}
-@media(max-width:800px){
-  .grid{grid-template-columns:1fr}
-}
+.good{background:var(--good)}
+.mid{background:var(--mid)}
+.bad{background:var(--bad)}
+.small{font-size:13px;color:var(--muted)}
+hr{border:none;border-top:1px solid rgba(255,255,255,.08);margin:12px 0}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 
@@ -82,84 +73,165 @@ button{
 <div class="container">
 
 <h1>StudyEd</h1>
-<p class="small">AI-powered team formation for fair, balanced group work</p>
+<p class="small">AI-assisted, explainable team formation for serious group work</p>
 
-<!-- ADD STUDENT -->
+<!-- INPUT -->
 <div class="card">
 <h3>Add Student</h3>
-<input id="name" placeholder="Name" />
-<input id="skills" placeholder="Skills (comma separated)" />
-<input id="roles" placeholder="Preferred roles (comma separated)" />
-<input id="interests" placeholder="Career interests (comma separated)" />
+<input id="name" placeholder="Name">
+<input id="skills" placeholder="Skills (comma separated)">
+<input id="roles" placeholder="Preferred roles (comma separated)">
+<input id="interests" placeholder="Career interests (comma separated)">
 <button onclick="addStudent()">Add Student</button>
 </div>
 
 <div class="grid">
-
-<!-- STUDENT LIST -->
 <div class="card">
 <h3>Students</h3>
-<div id="students"></div>
+<div id="studentList"></div>
 </div>
 
-<!-- MATCHING -->
 <div class="card">
-<h3>Team Settings</h3>
-<input id="groupSize" type="number" value="3" min="2" />
-<input id="reqRoles" placeholder="Required roles (comma separated)" />
-<button onclick="runMatching()">Run AI Matching</button>
+<h3>Assignment Settings</h3>
+<input id="groupSize" type="number" min="2" value="4">
+<input id="requiredRoles" placeholder="Required roles (comma separated)">
+<button onclick="runMatching()">Generate Teams</button>
+</div>
 </div>
 
-</div>
-
-<!-- RESULTS -->
 <div class="card">
 <h3>Generated Teams</h3>
 <div id="teams"></div>
+</div>
+
+<div class="card">
+<h3>Explainability</h3>
+<pre id="explain" class="small">Select a team</pre>
 </div>
 
 </div>
 
 <script>
 /* =====================
-   DATA
+   STATE
 ===================== */
 let students = [];
 let teams = [];
 
 /* =====================
-   UTILITIES
+   UTILS
 ===================== */
 const uid = () => Math.random().toString(36).slice(2,8);
 const tokenize = s => s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
-
-function cosine(a,b){
+const cosine = (a,b)=>{
   let dot=0,na=0,nb=0;
   for(let i=0;i<a.length;i++){
     dot+=a[i]*b[i];
     na+=a[i]*a[i];
     nb+=b[i]*b[i];
   }
-  return na && nb ? dot/(Math.sqrt(na)*Math.sqrt(nb)) : 0;
-}
+  return na&&nb ? dot/(Math.sqrt(na)*Math.sqrt(nb)) : 0;
+};
 
 /* =====================
    STUDENT CRUD
 ===================== */
 function addStudent(){
-  const s = {
+  const s={
     id:uid(),
-    name:document.getElementById("name").value || "Student",
-    skills:document.getElementById("skills").value.split(",").map(x=>x.trim()).filter(Boolean),
-    roles:document.getElementById("roles").value.split(",").map(x=>x.trim()).filter(Boolean),
-    interests:document.getElementById("interests").value.split(",").map(x=>x.trim()).filter(Boolean),
+    name:val("name","Student"),
+    skills:list("skills"),
+    roles:list("roles"),
+    interests:list("interests")
   };
   students.push(s);
   renderStudents();
 }
 
+function val(id,fallback){
+  return document.getElementById(id).value.trim() || fallback;
+}
+function list(id){
+  return document.getElementById(id).value
+    .split(",").map(x=>x.trim()).filter(Boolean);
+}
+
+/* =====================
+   VECTOR ENGINE
+===================== */
+function buildVocab(){
+  const set=new Set();
+  students.forEach(s=>{
+    tokenize(s.skills.join(" ")).forEach(t=>set.add(t));
+    tokenize(s.interests.join(" ")).forEach(t=>set.add(t));
+  });
+  return [...set];
+}
+function vectorize(s,vocab){
+  const tokens = tokenize(s.skills.join(" ")+" "+s.interests.join(" "));
+  return vocab.map(w=>tokens.includes(w)?1:0);
+}
+
+/* =====================
+   SCORING
+===================== */
+function scoreTeam(members,vectors,requiredRoles){
+  let sim=0,count=0;
+  for(let i=0;i<members.length;i++)
+    for(let j=i+1;j<members.length;j++){
+      sim+=cosine(vectors[members[i]],vectors[members[j]]);
+      count++;
+    }
+  const similarity = count?sim/count:0;
+
+  let roleHit=0;
+  requiredRoles.forEach(r=>{
+    if(members.some(i=>students[i].roles.includes(r))) roleHit++;
+  });
+  const roleCoverage = requiredRoles.length
+    ? roleHit/requiredRoles.length : 1;
+
+  const total = Math.round((0.65*similarity + 0.35*roleCoverage)*100);
+  return {similarity,roleCoverage,total};
+}
+
+/* =====================
+   MATCHING ENGINE
+===================== */
+function runMatching(){
+  const size=+document.getElementById("groupSize").value;
+  const requiredRoles=list("requiredRoles");
+
+  const vocab=buildVocab();
+  const vectors=students.map(s=>vectorize(s,vocab));
+  let pool=[...students.keys()];
+  teams=[];
+
+  while(pool.length){
+    let team=[pool.shift()];
+    while(team.length<size && pool.length){
+      let best=-1,bestScore=-1;
+      pool.forEach(i=>{
+        const test=[...team,i];
+        const score=scoreTeam(test,vectors,requiredRoles).total;
+        if(score>bestScore){bestScore=score;best=i;}
+      });
+      team.push(best);
+      pool=pool.filter(x=>x!==best);
+    }
+    teams.push({
+      members:team,
+      score:scoreTeam(team,vectors,requiredRoles)
+    });
+  }
+  renderTeams();
+}
+
+/* =====================
+   UI
+===================== */
 function renderStudents(){
-  const el=document.getElementById("students");
+  const el=document.getElementById("studentList");
   el.innerHTML="";
   students.forEach(s=>{
     el.innerHTML+=`
@@ -171,76 +243,42 @@ function renderStudents(){
   });
 }
 
-/* =====================
-   AI MATCHING ENGINE
-===================== */
-function runMatching(){
-  const size = +document.getElementById("groupSize").value || 3;
-  const reqRoles = document.getElementById("reqRoles").value
-      .split(",").map(x=>x.trim()).filter(Boolean);
-
-  const vocab = [...new Set(students.flatMap(s =>
-    tokenize(s.skills.join(" ")+" "+s.interests.join(" "))
-  ))];
-
-  const vectors = students.map(s =>
-    vocab.map(w =>
-      tokenize(s.skills.join(" ")+" "+s.interests.join(" ")).includes(w) ? 1 : 0
-    )
-  );
-
-  let pool=[...students.keys()];
-  teams=[];
-
-  while(pool.length){
-    let team=[pool.shift()];
-    while(team.length<size && pool.length){
-      let best=null,bestScore=-1;
-      pool.forEach(i=>{
-        let score=0;
-        team.forEach(j=>score+=cosine(vectors[i],vectors[j]));
-        if(score>bestScore){bestScore=score;best=i;}
-      });
-      team.push(best);
-      pool=pool.filter(x=>x!==best);
-    }
-    teams.push(scoreTeam(team,reqRoles));
-  }
-
-  renderTeams();
-}
-
-function scoreTeam(memberIdxs, reqRoles){
-  const members=memberIdxs.map(i=>students[i]);
-  let roleScore=0;
-  reqRoles.forEach(r=>{
-    if(members.some(m=>m.roles.includes(r))) roleScore++;
-  });
-  const score=Math.round((roleScore/Math.max(1,reqRoles.length))*100);
-  return {members,score};
-}
-
-/* =====================
-   UI RENDERING
-===================== */
 function renderTeams(){
   const el=document.getElementById("teams");
   el.innerHTML="";
   teams.forEach((t,i)=>{
-    const cls = t.score>80?"score-high":t.score>60?"score-mid":"score-low";
+    const cls=t.score.total>80?"good":t.score.total>60?"mid":"bad";
     el.innerHTML+=`
       <div class="card">
-        <div class="pill ${cls}">Compatibility ${t.score}%</div>
+        <span class="pill ${cls}">${t.score.total}%</span>
         <h4>Team ${i+1}</h4>
-        ${t.members.map(m=>`
+        ${t.members.map(i=>`
           <div class="student">
-            <strong>${m.name}</strong>
-            <div class="small">Role: ${m.roles[0]||"Member"}</div>
-          </div>
-        `).join("")}
+            <strong>${students[i].name}</strong>
+            <div class="small">${students[i].roles[0]||"Member"}</div>
+          </div>`).join("")}
+        <button onclick="explainTeam(${i})">Explain</button>
       </div>`;
   });
+}
+
+function explainTeam(i){
+  const t=teams[i];
+  const e=document.getElementById("explain");
+  e.textContent=
+`Team ${i+1}
+Similarity score: ${Math.round(t.score.similarity*100)}%
+Role coverage: ${Math.round(t.score.roleCoverage*100)}%
+
+Members:
+${t.members.map(i=>"- "+students[i].name).join("\n")}
+
+Why this team?
+- Maximized skill & interest overlap
+- Covered required roles where possible
+- Balanced contributions`;
 }
 </script>
 </body>
 </html>
+
